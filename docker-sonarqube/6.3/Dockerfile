@@ -1,0 +1,58 @@
+FROM ermac/oracle-jdk:8u121
+
+MAINTAINER Fabio Martino <fabiomartino@libero.it>
+
+ENV SONARQUBE_HOME /opt/sonarqube
+
+# Http port
+EXPOSE 9000
+
+# Database configuration
+# Defaults to using H2
+ENV SONARQUBE_JDBC_USERNAME sonar
+ENV SONARQUBE_JDBC_PASSWORD sonar
+ENV SONARQUBE_JDBC_URL jdbc:h2:tcp://localhost:9092/sonar
+
+ENV SONAR_VERSION 6.3
+
+RUN apt-get install wget gnupg unzip bash -y \
+    && set -x \
+    && cd /opt \
+    && wget --progress=bar:force http://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip -O sonarqube.zip \
+    && wget http://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-$SONAR_VERSION.zip.asc -O sonarqube.zip.asc \
+    && unzip sonarqube.zip \
+    && mv sonarqube-$SONAR_VERSION sonarqube \
+    && rm sonarqube.zip* \
+    && rm -rf $SONARQUBE_HOME/bin/* \
+    && cd sonarqube/extensions/plugins \
+    && wget --progress=bar:force http://sonarsource.bintray.com/Distribution/sonar-javascript-plugin/sonar-javascript-plugin-2.21.1.4786.jar \
+    -O sonar-javascript-plugin-2.21.1.4786.jar \
+    && wget --progress=bar:force http://sonarsource.bintray.com/Distribution/sonar-ldap-plugin/sonar-ldap-plugin-1.5.jar \
+    -O sonar-ldap-plugin-1.5.jar \
+    && wget --progress=bar:force http://sonarsource.bintray.com/Distribution/sonar-resharper-plugin-2.0.jar \
+    -O sonar-resharper-plugin-2.0.jar \
+    && wget --progress=bar:force http://downloads.sonarsource.com/plugins/org/codehaus/sonar-plugins/sonar-cobertura-plugin/1.6.3/sonar-cobertura-plugin-1.6.3.jar \
+    -O sonar-cobertura-plugin-1.6.3.jar \
+    && wget --progress=bar:force http://sonarsource.bintray.com/Distribution/sonar-csharp-plugin/sonar-csharp-plugin-5.8.0.660.jar \
+    -O sonar-csharp-plugin-5.8.0.660.jar \
+    && wget --progress=bar:force --no-check-certificate https://github.com/SonarQubeCommunity/sonar-css/releases/download/2.1/sonar-css-plugin-2.1.jar \
+    -O sonar-css-plugin-2.1.jar \
+    && wget --progress=bar:force http://sonarsource.bintray.com/Distribution/sonar-findbugs-plugin/sonar-findbugs-plugin-3.3.jar \
+    -O sonar-findbugs-plugin-3.3.jar \
+    && wget --progress=bar:force http://downloads.sonarsource.com/plugins/org/codehaus/sonar-plugins/sonar-motion-chart-plugin/1.7/sonar-motion-chart-plugin-1.7.jar \
+    -O sonar-motion-chart-plugin-1.7.jar \
+    && wget --progress=bar:force http://downloads.sonarsource.com/plugins/org/codehaus/sonar-plugins/python/sonar-python-plugin/1.5/sonar-python-plugin-1.5.jar \
+    -O sonar-python-plugin-1.5.jar \
+    && wget --progress=bar:force http://downloads.sonarsource.com/plugins/org/codehaus/sonar-plugins/sonar-timeline-plugin/1.5/sonar-timeline-plugin-1.5.jar \
+    -O sonar-timeline-plugin-1.5.jar \
+    && wget --progress=bar:force http://sonarsource.bintray.com/Distribution/sonar-web-plugin/sonar-web-plugin-2.5.0.476.jar \
+    -O sonar-web-plugin-2.5.0.476.jar \
+    && wget --progress=bar:force http://sonarsource.bintray.com/Distribution/sonar-xml-plugin/sonar-xml-plugin-1.4.2.885.jar \
+    -O sonar-xml-plugin-1.4.2.885.jar
+
+VOLUME ["$SONARQUBE_HOME/data", "$SONARQUBE_HOME/extensions", "$SONARQUBE_HOME/conf"]
+
+WORKDIR $SONARQUBE_HOME
+COPY run.sh $SONARQUBE_HOME/bin/
+RUN chmod +x $SONARQUBE_HOME/bin/run.sh
+ENTRYPOINT ["./bin/run.sh"]
